@@ -4,6 +4,13 @@
 
 Base URL: `http://localhost:3000`
 
+### Required Environment Variables
+
+- `PORT`
+- `MONGO_URI`
+- `JWT_SECRET` (access token signing secret)
+- `JWT_REFRESH_SECRET` (refresh token signing secret)
+
 ### Response Envelope
 
 Success:
@@ -108,7 +115,8 @@ Response `200`:
   "status": "success",
   "message": "Login successful",
   "data": {
-    "token": "jwt_token_here"
+    "token": "access_jwt_token_here",
+    "refreshToken": "refresh_jwt_token_here"
   }
 }
 ```
@@ -119,6 +127,38 @@ Invalid credentials `401`:
 {
   "status": "error",
   "message": "Invalid credentials"
+}
+```
+
+#### `POST /auth/refresh`
+
+Request body:
+
+```json
+{
+  "refreshToken": "refresh_jwt_token_here"
+}
+```
+
+Response `200`:
+
+```json
+{
+  "status": "success",
+  "message": "Token refreshed",
+  "data": {
+    "token": "new_access_jwt_token_here",
+    "refreshToken": "new_refresh_jwt_token_here"
+  }
+}
+```
+
+Invalid refresh token `401`:
+
+```json
+{
+  "status": "error",
+  "message": "Invalid refresh token"
 }
 ```
 
