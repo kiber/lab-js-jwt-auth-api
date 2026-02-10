@@ -1,16 +1,20 @@
 const jwt = require('jsonwebtoken');
+const { sendError } = require('../utils/response');
 
 module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader) return res.sendStatus(401);
+  if (!authHeader) return sendError(res, 401, 'Authorization header is required');
 
-  const token = authHeader.split(' ')[1];
+  const [scheme, token] = authHeader.split(' ');
+  if (scheme !== 'Bearer' || !token) {
+    return sendError(res, 401, 'Authorization header must use Bearer token');
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-    next();
+    return next();
   } catch {
-    res.sendStatus(403);
+    return sendError(res, 403, 'Invalid or expired token');
   }
 };

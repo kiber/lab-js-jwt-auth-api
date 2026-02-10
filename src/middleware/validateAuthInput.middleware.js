@@ -1,6 +1,7 @@
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 72;
+const { sendError } = require('../utils/response');
 
 const normalizeEmail = (email) => email.trim().toLowerCase();
 
@@ -21,10 +22,7 @@ module.exports = (req, res, next) => {
   }
 
   if (errors.length) {
-    return res.status(400).json({
-      message: 'Validation failed',
-      errors
-    });
+    return sendError(res, 400, 'Validation failed', errors);
   }
 
   req.body.email = normalizeEmail(email);
