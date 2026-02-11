@@ -162,6 +162,34 @@ Invalid refresh token `401`:
 }
 ```
 
+#### `POST /auth/logout`
+
+Request body:
+
+```json
+{
+  "refreshToken": "refresh_jwt_token_here"
+}
+```
+
+Response `200`:
+
+```json
+{
+  "status": "success",
+  "message": "Logged out successfully"
+}
+```
+
+Invalid refresh token `401`:
+
+```json
+{
+  "status": "error",
+  "message": "Invalid refresh token"
+}
+```
+
 #### `GET /profile`
 
 Headers:

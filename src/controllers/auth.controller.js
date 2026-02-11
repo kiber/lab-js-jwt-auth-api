@@ -77,3 +77,29 @@ exports.refresh = async (req, res) => {
     refreshToken: newRefreshToken
   });
 };
+
+exports.logout = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  let decoded;
+  try {
+    decoded = jwt.verify(refreshToken, getRefreshTokenSecret());
+  } catch {
+    return sendError(res, 401, 'Invalid refresh token');
+  }
+
+  const user = await User.findById(decoded.userId);
+  if (!user || !user.refreshTokenHash) {
+    return sendError(res, 401, 'Invalid refresh token');
+  }
+
+  const incomingTokenHash = hashToken(refreshToken);
+  if (user.refreshTokenHash !== incomingTokenHash) {
+    return sendError(res, 401, 'Invalid refresh token');
+  }
+
+  user.refreshTokenHash = null;
+  await user.save();
+
+  return sendSuccess(res, 200, 'Logged out successfully');
+};
