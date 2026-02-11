@@ -24,7 +24,8 @@ const {
   register,
   login,
   refresh,
-  logout
+  logout,
+  verify
 } = require('../../src/controllers/auth.controller');
 
 const makeRes = () => {
@@ -383,6 +384,74 @@ describe('auth.controller', () => {
       expect(res.json).toHaveBeenCalledWith({
         status: 'success',
         message: 'Logged out successfully'
+      });
+    });
+  });
+
+  describe('verify', () => {
+    test('returns 401 when authorization header is missing', async () => {
+      const req = { headers: {} };
+      const res = makeRes();
+
+      await verify(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: 'Authorization header is required'
+      });
+      expect(jwt.verify).not.toHaveBeenCalled();
+    });
+
+    test('returns 401 when authorization header is not bearer token', async () => {
+      const req = { headers: { authorization: 'Token access-token' } };
+      const res = makeRes();
+
+      await verify(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: 'Authorization header must use Bearer token'
+      });
+      expect(jwt.verify).not.toHaveBeenCalled();
+    });
+
+    test('returns 401 when jwt verification fails', async () => {
+      const req = { headers: { authorization: 'Bearer invalid-token' } };
+      const res = makeRes();
+
+      jwt.verify.mockImplementation(() => {
+        throw new Error('invalid token');
+      });
+
+      await verify(req, res);
+
+      expect(jwt.verify).toHaveBeenCalledWith('invalid-token', auth.jwtSecret);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: 'Invalid token'
+      });
+    });
+
+    test('returns valid true and userId when token is valid', async () => {
+      const req = { headers: { authorization: 'Bearer access-token' } };
+      const res = makeRes();
+
+      jwt.verify.mockReturnValue({ userId: 'user-1' });
+
+      await verify(req, res);
+
+      expect(jwt.verify).toHaveBeenCalledWith('access-token', auth.jwtSecret);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'success',
+        message: 'Token is valid',
+        data: {
+          valid: true,
+          userId: 'user-1'
+        }
       });
     });
   });

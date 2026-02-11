@@ -99,3 +99,25 @@ exports.logout = async (req, res) => {
 
   return sendSuccess(res, 200, 'Logged out successfully');
 };
+
+exports.verify = async (req, res) => {
+  const authHeader = req.headers?.authorization;
+  if (!authHeader) return sendError(res, 401, 'Authorization header is required');
+
+  const [scheme, token] = authHeader.split(' ');
+  if (scheme !== 'Bearer' || !token) {
+    return sendError(res, 401, 'Authorization header must use Bearer token');
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, auth.jwtSecret);
+  } catch {
+    return sendError(res, 401, 'Invalid token');
+  }
+
+  return sendSuccess(res, 200, 'Token is valid', {
+    valid: true,
+    userId: String(decoded.userId)
+  });
+};
