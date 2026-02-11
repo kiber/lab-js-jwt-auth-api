@@ -3,28 +3,24 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendSuccess, sendError } = require('../utils/response');
-
-const ACCESS_TOKEN_TTL = '15m';
-const REFRESH_TOKEN_TTL = '7d';
-
-const getRefreshTokenSecret = () => process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+const { auth } = require('../config/app.config');
 
 const hashToken = (token) => {
   return crypto.createHash('sha256').update(token).digest('hex');
 };
 
 const signAccessToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL });
+  return jwt.sign({ userId }, auth.jwtSecret, { expiresIn: auth.accessTokenTtl });
 };
 
 const signRefreshToken = (userId) => {
-  return jwt.sign({ userId }, getRefreshTokenSecret(), { expiresIn: REFRESH_TOKEN_TTL });
+  return jwt.sign({ userId }, auth.jwtRefreshSecret, { expiresIn: auth.refreshTokenTtl });
 };
 
 exports.register = async (req, res) => {
   const { email, password } = req.body;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, auth.bcryptSaltRounds);
   await User.create({ email, password: hashedPassword });
 
   return sendSuccess(res, 201, 'User registered');
@@ -52,7 +48,7 @@ exports.refresh = async (req, res) => {
 
   let decoded;
   try {
-    decoded = jwt.verify(refreshToken, getRefreshTokenSecret());
+    decoded = jwt.verify(refreshToken, auth.jwtRefreshSecret);
   } catch {
     return sendError(res, 401, 'Invalid refresh token');
   }
@@ -83,7 +79,7 @@ exports.logout = async (req, res) => {
 
   let decoded;
   try {
-    decoded = jwt.verify(refreshToken, getRefreshTokenSecret());
+    decoded = jwt.verify(refreshToken, auth.jwtRefreshSecret);
   } catch {
     return sendError(res, 401, 'Invalid refresh token');
   }
