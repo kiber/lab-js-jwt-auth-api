@@ -13,7 +13,6 @@ const appConfig = {
     bcryptSaltRounds: 10
   },
   validation: {
-    emailRegex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     passwordMinLength: 8,
     passwordMaxLength: 72
   }
