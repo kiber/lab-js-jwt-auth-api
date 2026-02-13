@@ -7,6 +7,7 @@ Base URL: `http://localhost:3000`
 ### Required Environment Variables
 
 - `PORT`
+- `CORS_ORIGIN` (optional, default `http://localhost:5173`)
 - `LOG_LEVEL` (optional, default `info`)
 - `MONGO_URI`
 - `JWT_SECRET` (access token signing secret)
