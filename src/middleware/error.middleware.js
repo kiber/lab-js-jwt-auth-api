@@ -1,4 +1,5 @@
 const { sendError } = require('../utils/response');
+const logger = require('../config/logger');
 
 module.exports = (err, req, res, next) => {
   if (res.headersSent) {
@@ -17,7 +18,12 @@ module.exports = (err, req, res, next) => {
   const message = statusCode >= 500 ? 'Internal server error' : (err && err.message) || 'Request failed';
 
   if (statusCode >= 500) {
-    console.error(err);
+    logger.error('Unhandled server error', {
+      method: req.method,
+      path: req.originalUrl,
+      statusCode,
+      error: err
+    });
   }
 
   return sendError(res, statusCode, message);

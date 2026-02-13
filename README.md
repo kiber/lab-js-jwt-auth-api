@@ -7,6 +7,7 @@ Base URL: `http://localhost:3000`
 ### Required Environment Variables
 
 - `PORT`
+- `LOG_LEVEL` (optional, default `info`)
 - `MONGO_URI`
 - `JWT_SECRET` (access token signing secret)
 - `JWT_REFRESH_SECRET` (refresh token signing secret)

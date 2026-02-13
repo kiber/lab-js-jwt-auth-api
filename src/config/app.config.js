@@ -2,6 +2,9 @@ const appConfig = {
   app: {
     port: Number(process.env.PORT) || 3000
   },
+  logging: {
+    level: process.env.LOG_LEVEL || 'info'
+  },
   db: {
     mongoUri: process.env.MONGO_URI
   },
