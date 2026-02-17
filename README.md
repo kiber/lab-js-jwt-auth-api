@@ -2,16 +2,30 @@
 
 ## API Contract
 
-Base URL: `http://localhost:3000`
+Base URL: `http://localhost:3000/api/v1`
 
 ### Required Environment Variables
 
 - `PORT`
+- `API_BASE_PATH` (optional, default `/api/v1`)
+- `TRUST_PROXY` (optional, default `false`; set `true` behind reverse proxy)
 - `CORS_ORIGIN` (optional, default `http://localhost:5173`)
 - `LOG_LEVEL` (optional, default `info`)
 - `MONGO_URI`
 - `JWT_SECRET` (access token signing secret)
 - `JWT_REFRESH_SECRET` (refresh token signing secret)
+- `AUTH_LOCKOUT_ENABLED` (optional, default `true`)
+- `AUTH_LOCKOUT_MAX_FAILED_ATTEMPTS` (optional, default `5`)
+- `AUTH_LOCKOUT_DURATION` (optional, default `15m`)
+- `RATE_LIMIT_ENABLED` (optional, default `true`)
+- `RATE_LIMIT_STORE` (optional, `memory`, `mongo`, or `redis`, default `memory`)
+- `RATE_LIMIT_REDIS_URL` (required when `RATE_LIMIT_STORE=redis`; fallback to `REDIS_URL` if set)
+- `RATE_LIMIT_KEY_PREFIX` (optional, default `jwt-auth`)
+- `RATE_LIMIT_LOGIN_WINDOW` / `RATE_LIMIT_LOGIN_LIMIT` (optional, default `15m` / `5`)
+- `RATE_LIMIT_REGISTER_WINDOW` / `RATE_LIMIT_REGISTER_LIMIT` (optional, default `1h` / `5`)
+- `RATE_LIMIT_REFRESH_WINDOW` / `RATE_LIMIT_REFRESH_LIMIT` (optional, default `15m` / `20`)
+- `RATE_LIMIT_LOGOUT_WINDOW` / `RATE_LIMIT_LOGOUT_LIMIT` (optional, default `15m` / `20`)
+- `RATE_LIMIT_VERIFY_WINDOW` / `RATE_LIMIT_VERIFY_LIMIT` (optional, default `15m` / `30`)
 
 ### Response Envelope
 
@@ -238,6 +252,18 @@ Invalid/expired token `403`:
 ```
 
 ### Global Errors
+
+Rate limit exceeded `429`:
+
+```json
+{
+  "status": "error",
+  "message": "Too many requests",
+  "errors": [
+    "Try again in 60 seconds"
+  ]
+}
+```
 
 Route not found `404`:
 
