@@ -12,7 +12,8 @@ const makeRateLimitPolicy = (windowEnv, limitEnv, defaults) => ({
 const appConfig = {
   app: {
     port: Number(process.env.PORT) || 3000,
-    trustProxy: parseBoolean(process.env.TRUST_PROXY, false)
+    trustProxy: parseBoolean(process.env.TRUST_PROXY, false),
+    apiBasePath: process.env.API_BASE_PATH || '/api/v1'
   },
   cors: {
     origin: process.env.CORS_ORIGIN || 'http://localhost:5173'

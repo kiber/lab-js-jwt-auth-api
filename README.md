@@ -2,11 +2,12 @@
 
 ## API Contract
 
-Base URL: `http://localhost:3000`
+Base URL: `http://localhost:3000/api/v1`
 
 ### Required Environment Variables
 
 - `PORT`
+- `API_BASE_PATH` (optional, default `/api/v1`)
 - `TRUST_PROXY` (optional, default `false`; set `true` behind reverse proxy)
 - `CORS_ORIGIN` (optional, default `http://localhost:5173`)
 - `LOG_LEVEL` (optional, default `info`)
