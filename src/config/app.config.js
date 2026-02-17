@@ -28,7 +28,12 @@ const appConfig = {
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
     accessTokenTtl: '15m',
     refreshTokenTtl: '7d',
-    bcryptSaltRounds: 10
+    bcryptSaltRounds: 10,
+    accountLockout: {
+      enabled: parseBoolean(process.env.AUTH_LOCKOUT_ENABLED, true),
+      maxFailedAttempts: parsePositiveInteger(process.env.AUTH_LOCKOUT_MAX_FAILED_ATTEMPTS, 5),
+      lockDurationMs: parseDurationToMs(process.env.AUTH_LOCKOUT_DURATION || '15m', 15 * 60 * 1000)
+    }
   },
   validation: {
     passwordMinLength: 8,

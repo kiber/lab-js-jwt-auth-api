@@ -39,7 +39,7 @@ const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex'
 
 describe('auth.controller', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   describe('register', () => {
@@ -163,7 +163,12 @@ describe('auth.controller', () => {
     test('returns 401 when password is invalid', async () => {
       const req = { body: { email: 'john@example.com', password: 'wrong-pass' } };
       const res = makeRes();
-      const user = { password: 'stored-hash' };
+      const user = {
+        password: 'stored-hash',
+        failedLoginAttempts: 0,
+        lockUntil: null,
+        save: jest.fn().mockResolvedValue(undefined)
+      };
 
       User.findOne.mockResolvedValue(user);
       bcrypt.compare.mockResolvedValue(false);
@@ -176,7 +181,56 @@ describe('auth.controller', () => {
         status: 'error',
         message: 'Invalid credentials'
       });
+      expect(user.failedLoginAttempts).toBe(1);
+      expect(user.save).toHaveBeenCalled();
       expect(jwt.sign).not.toHaveBeenCalled();
+    });
+
+    test('returns 423 when account is already locked', async () => {
+      const req = { body: { email: 'john@example.com', password: 'secret123' } };
+      const res = makeRes();
+      const user = {
+        password: 'stored-hash',
+        lockUntil: new Date(Date.now() + 60_000),
+        save: jest.fn()
+      };
+
+      User.findOne.mockResolvedValue(user);
+
+      await login(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(423);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: 'Account temporarily locked due to failed login attempts'
+      });
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+      expect(user.save).not.toHaveBeenCalled();
+    });
+
+    test('locks account after max failed attempts', async () => {
+      const req = { body: { email: 'john@example.com', password: 'wrong-pass' } };
+      const res = makeRes();
+      const user = {
+        password: 'stored-hash',
+        failedLoginAttempts: auth.accountLockout.maxFailedAttempts - 1,
+        lockUntil: null,
+        save: jest.fn().mockResolvedValue(undefined)
+      };
+
+      User.findOne.mockResolvedValue(user);
+      bcrypt.compare.mockResolvedValue(false);
+
+      await login(req, res);
+
+      expect(user.failedLoginAttempts).toBe(auth.accountLockout.maxFailedAttempts);
+      expect(user.lockUntil).toBeInstanceOf(Date);
+      expect(user.save).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(423);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: 'Account temporarily locked due to failed login attempts'
+      });
     });
 
     test('returns access and refresh tokens when credentials are valid', async () => {
@@ -186,6 +240,8 @@ describe('auth.controller', () => {
         _id: 'user-1',
         password: 'stored-hash',
         refreshTokenHash: null,
+        failedLoginAttempts: 2,
+        lockUntil: new Date(Date.now() - 60_000),
         save: jest.fn().mockResolvedValue(undefined)
       };
 
@@ -204,6 +260,8 @@ describe('auth.controller', () => {
         expiresIn: auth.refreshTokenTtl
       });
       expect(user.refreshTokenHash).toBe(sha256('refresh-token'));
+      expect(user.failedLoginAttempts).toBe(0);
+      expect(user.lockUntil).toBeNull();
       expect(user.save).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({

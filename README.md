@@ -13,6 +13,9 @@ Base URL: `http://localhost:3000`
 - `MONGO_URI`
 - `JWT_SECRET` (access token signing secret)
 - `JWT_REFRESH_SECRET` (refresh token signing secret)
+- `AUTH_LOCKOUT_ENABLED` (optional, default `true`)
+- `AUTH_LOCKOUT_MAX_FAILED_ATTEMPTS` (optional, default `5`)
+- `AUTH_LOCKOUT_DURATION` (optional, default `15m`)
 - `RATE_LIMIT_ENABLED` (optional, default `true`)
 - `RATE_LIMIT_STORE` (optional, `memory`, `mongo`, or `redis`, default `memory`)
 - `RATE_LIMIT_REDIS_URL` (required when `RATE_LIMIT_STORE=redis`; fallback to `REDIS_URL` if set)

@@ -31,13 +31,39 @@ exports.login = async (req, res) => {
 
   const user = await User.findOne({ email });
   if (!user) return sendError(res, 401, 'Invalid credentials');
+  const now = new Date();
+  const lockoutConfig = auth.accountLockout;
+
+  if (lockoutConfig.enabled && user.lockUntil && user.lockUntil > now) {
+    return sendError(res, 423, 'Account temporarily locked due to failed login attempts');
+  }
+
+  if (lockoutConfig.enabled && user.lockUntil && user.lockUntil <= now) {
+    user.failedLoginAttempts = 0;
+    user.lockUntil = null;
+  }
 
   const isValid = await bcrypt.compare(password, user.password);
-  if (!isValid) return sendError(res, 401, 'Invalid credentials');
+  if (!isValid) {
+    if (lockoutConfig.enabled) {
+      user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+      if (user.failedLoginAttempts >= lockoutConfig.maxFailedAttempts) {
+        user.lockUntil = new Date(Date.now() + lockoutConfig.lockDurationMs);
+        await user.save();
+        return sendError(res, 423, 'Account temporarily locked due to failed login attempts');
+      }
+
+      await user.save();
+    }
+
+    return sendError(res, 401, 'Invalid credentials');
+  }
 
   const token = signAccessToken(user._id);
   const refreshToken = signRefreshToken(user._id);
   user.refreshTokenHash = hashToken(refreshToken);
+  user.failedLoginAttempts = 0;
+  user.lockUntil = null;
   await user.save();
 
   return sendSuccess(res, 200, 'Login successful', { token, refreshToken });
