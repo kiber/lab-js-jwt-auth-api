@@ -4,10 +4,14 @@ const authRoutes = require('./routes/auth.routes');
 const profileRoutes = require('./routes/profile.routes');
 const errorMiddleware = require('./middleware/error.middleware');
 const requestLogger = require('./middleware/requestLogger.middleware');
-const { cors: corsConfig } = require('./config/app.config');
+const { app: appConfig, cors: corsConfig } = require('./config/app.config');
 const { sendSuccess, sendError } = require('./utils/response');
 
 const app = express();
+if (appConfig.trustProxy) {
+  app.set('trust proxy', 1);
+}
+
 app.use(express.json());
 app.use(
   cors({
